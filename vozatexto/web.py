@@ -66,6 +66,15 @@ async def serve_index():
     return HTMLResponse(index_file.read_text(encoding="utf-8"))
 
 
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"])
+@app.api_route("/icon.svg", methods=["GET", "HEAD"])
+async def serve_favicon():
+    icon_file = STATIC_DIR / "icon.svg"
+    if icon_file.exists():
+        return FileResponse(icon_file, media_type="image/svg+xml")
+    return PlainTextResponse("", status_code=204)
+
+
 @app.get("/api/status")
 async def get_status():
     devices = list_input_devices()
