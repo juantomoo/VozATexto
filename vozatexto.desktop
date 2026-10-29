@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=VozATexto
+GenericName=Transcriptor de Voz a Texto
+Comment=Transcripción de audio y voz en tiempo real y por archivos con faster-whisper y Silero VAD
+Exec="/home/juan/Datos/Datos Juan/ProyectosSoftware/VozATexto/web.sh"
+Icon=vozatexto
+Path=/home/juan/Datos/Datos Juan/ProyectosSoftware/VozATexto
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=whisper;transcription;audio;voice;speech;voz;transcriptor;
+StartupNotify=true
