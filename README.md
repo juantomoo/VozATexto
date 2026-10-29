@@ -29,16 +29,19 @@ Construida bajo los lineamientos de máxima eficiencia y calidad para hardware l
 
 ## 🚀 Inicio Rápido
 
-### 1. Ejecutar el Menú Interactivo
-Desde la carpeta del proyecto, simplemente ejecuta:
+### 1. Interfaz Gráfica Web (Cero mantenimiento, cualquier SO)
+Para abrir la interfaz visual en tu navegador predeterminado:
+```bash
+./web.sh
+```
+*(o también `./run.sh --ui` / `uv run vozatexto-web`)*.  
+Abre automáticamente la aplicación web en `http://127.0.0.1:8765` con arrastrar y soltar de archivos, reproductor de audio, grabación con micrófono, visor de segmentos y editor del glosario.
+
+### 2. Menú Interactivo en Terminal (CLI)
+Si prefieres la terminal:
 ```bash
 ./run.sh
 ```
-o alternativamente con `uv`:
-```bash
-uv run vozatexto
-```
-
 Navega con las flechas del teclado `↑` / `↓` y presiona `Enter` para seleccionar.
 
 ---

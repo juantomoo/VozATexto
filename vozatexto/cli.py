@@ -508,31 +508,37 @@ def interactive_main_loop() -> None:
         action = questionary.select(
             "¿Qué deseas hacer?",
             choices=[
-                "🎙️  1. Transcribir en Tiempo Real (Micrófono)",
-                "📁 2. Transcribir Archivo Grabado (Audio / Video)",
-                "💾 3. Re-exportar / Convertir Última Transcripción a otros formatos",
-                "✏️  4. Glosario y Correcciones de Usuario (Nombres propios, Lugares)",
-                "⚙️  5. Configuración y Preferencias",
-                "📊 6. Ver Estado del Hardware y Sistema",
-                "🚪 7. Salir",
+                "🌐 1. Abrir Interfaz Gráfica Web (Navegador)",
+                "🎙️  2. Transcribir en Tiempo Real (Micrófono)",
+                "📁 3. Transcribir Archivo Grabado (Audio / Video)",
+                "💾 4. Re-exportar / Convertir Última Transcripción a otros formatos",
+                "✏️  5. Glosario y Correcciones de Usuario (Nombres propios, Lugares)",
+                "⚙️  6. Configuración y Preferencias",
+                "📊 7. Ver Estado del Hardware y Sistema",
+                "🚪 8. Salir",
             ],
         ).ask()
 
-        if not action or "7. Salir" in action:
+        if not action or "8. Salir" in action:
             console.print("[dim cyan]Hasta luego.[/dim cyan]")
             break
 
-        if "1. Transcribir en Tiempo Real" in action:
+        if "1. Abrir Interfaz Gráfica" in action:
+            from vozatexto.web import start_server
+            console.print("[green]Iniciando Interfaz Gráfica Web...[/green]")
+            start_server()
+            break
+        elif "2. Transcribir en Tiempo Real" in action:
             interactive_realtime_flow(engine, config)
-        elif "2. Transcribir Archivo Grabado" in action:
+        elif "3. Transcribir Archivo Grabado" in action:
             interactive_file_flow(engine, config)
-        elif "3. Re-exportar" in action:
+        elif "4. Re-exportar" in action:
             interactive_reexport_flow(config)
-        elif "4. Glosario y Correcciones" in action:
+        elif "5. Glosario y Correcciones" in action:
             interactive_corrections_menu(config)
-        elif "5. Configuración y Preferencias" in action:
+        elif "6. Configuración y Preferencias" in action:
             interactive_settings_menu(config)
-        elif "6. Ver Estado" in action:
+        elif "7. Ver Estado" in action:
             show_system_status(config)
 
         console.print()
@@ -550,10 +556,16 @@ def main() -> None:
     parser.add_argument("-o", "--output-dir", help="Directorio donde guardar los resultados")
     parser.add_argument("--format", nargs="+", choices=["txt", "srt", "vtt", "json"], help="Formatos de guardado automático")
     parser.add_argument("--mic", type=int, help="Índice del dispositivo de micrófono a usar")
+    parser.add_argument("--ui", "--web", action="store_true", help="Iniciar la interfaz gráfica web en el navegador")
     parser.add_argument("--status", action="store_true", help="Mostrar diagnóstico de hardware y configuración")
 
     args = parser.parse_args()
     config = AppConfig.load()
+
+    if args.ui:
+        from vozatexto.web import start_server
+        start_server()
+        return
 
     if args.output_dir:
         config.output_dir = str(Path(args.output_dir).resolve())

@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VozATexto — Transcriptor de Audio y Voz</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d30;
+      --card-border: #232f48;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --accent-cyan: #06b6d4;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --radius: 10px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1040px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      font-size: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #1e293b;
+      color: var(--accent-cyan);
+      border: 1px solid #334155;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      padding: 6px;
+      border-radius: var(--radius);
+      border: 1px solid var(--card-border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tab-btn.active {
+      color: #fff;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* Panels */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Upload Box */
+    .drop-zone {
+      border: 2px dashed #334155;
+      border-radius: var(--radius);
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.4);
+      transition: all 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.05);
+    }
+    .drop-icon { font-size: 40px; margin-bottom: 12px; }
+    .drop-text { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .drop-hint { font-size: 12px; color: var(--text-muted); }
+
+    /* Form Controls */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    select, input[type="text"] {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      user-select: none;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0b0f19;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    .btn-secondary:hover { background: #334155; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    /* Audio Player */
+    .audio-preview {
+      margin-top: 16px;
+      display: none;
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+    }
+    audio { width: 100%; height: 36px; outline: none; }
+
+    /* Results */
+    .results-container { display: none; }
+    .results-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .transcript-box {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 480px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .segment-item {
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      display: flex;
+      gap: 12px;
+    }
+    .segment-item:hover { background: rgba(255, 255, 255, 0.03); }
+    .timestamp {
+      color: var(--accent-cyan);
+      font-family: monospace;
+      font-size: 12px;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .segment-text { flex: 1; }
+
+    /* Mic Section */
+    .mic-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 0;
+      gap: 16px;
+    }
+    .mic-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #0b0f19;
+      font-size: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      transition: all 0.3s;
+    }
+    .mic-btn.recording {
+      background: var(--danger);
+      animation: pulse 1.5s infinite;
+      color: #fff;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .mic-timer {
+      font-size: 24px;
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+    .audio-meter {
+      width: 240px;
+      height: 6px;
+      background: #334155;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .audio-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-cyan));
+      transition: width 0.05s ease;
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+      border-bottom: 1px solid #1e293b;
+    }
+    th { color: var(--text-muted); font-weight: 600; }
+    .tag {
+      background: #1e293b;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(11, 15, 25, 0.3);
+      border-radius: 50%;
+      border-top-color: #0b0f19;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert Notice */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      color: var(--accent-cyan);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <span class="brand-icon">🎙️</span>
+        <div>
+          <h1>VozATexto</h1>
+          <span style="font-size: 12px; color: var(--text-muted);">Transcriptor Local Multilingüe • faster-whisper + Silero VAD</span>
+        </div>
+      </div>
+      <div id="hardware-badge" class="badge">Detectando Hardware...</div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('file')">📁 Archivo de Grabación</button>
+      <button class="tab-btn" onclick="switchTab('realtime')">🎙️ Tiempo Real (Micrófono)</button>
+      <button class="tab-btn" onclick="switchTab('vocabulary')">✏️ Glosario y Reglas</button>
+      <button class="tab-btn" onclick="switchTab('system')">⚙️ Sistema y Hardware</button>
+    </div>
+
+    <!-- TAB 1: ARCHIVO -->
+    <div id="tab-file" class="panel active">
+      <div class="card">
+        <div class="card-title">
+          <span>Transcribir Audio o Video</span>
+          <button class="btn btn-secondary btn-sm" onclick="loadLastSession()">🔄 Cargar Última Sesión</button>
+        </div>
+
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <div class="drop-icon">📤</div>
+          <div class="drop-text" id="drop-text">Arrastra tu archivo aquí o haz clic para explorar</div>
+          <div class="drop-hint">Soporta MP3, WAV, M4A, OGG, FLAC, MP4, MKV, etc.</div>
+          <input type="file" id="file-input" style="display: none;" accept="audio/*,video/*" onchange="handleFileSelected(this.files[0])">
+        </div>
+
+        <div class="audio-preview" id="audio-preview">
+          <audio id="audio-element" controls></audio>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Idioma del Audio</label>
+            <select id="file-lang">
+              <option value="auto">Detección automática (auto)</option>
+              <option value="es" selected>Español (es)</option>
+              <option value="en">Inglés (en)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Modelo Whisper</label>
+            <select id="file-model">
+              <option value="large-v3-turbo" selected>large-v3-turbo (Recomendado para archivos: alta precisión y veloz)</option>
+              <option value="small">small (Rápido y ligero)</option>
+              <option value="base">base (Ultra rápido)</option>
+              <option value="medium">medium (Preciso)</option>
+              <option value="large-v3">large-v3 (Máxima precisión)</option>
+              <option value="tiny">tiny (Pruebas)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="file-timestamps" checked>
+            <span>Incluir marcas de tiempo [mm:ss]</span>
+          </label>
+          <button id="btn-transcribe" class="btn btn-primary" style="width: auto; padding: 10px 24px;" onclick="startFileTranscription()" disabled>
+            Iniciar Transcripción
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Box -->
+      <div class="card results-container" id="results-card">
+        <div class="results-header">
+          <div>
+            <span class="card-title" style="margin-bottom: 2px;">Resultado de la Transcripción</span>
+            <span id="transcription-stats" style="font-size: 12px; color: var(--text-muted);"></span>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-secondary btn-sm" onclick="copyFullText()">📋 Copiar Texto</button>
+            <button class="btn btn-secondary btn-sm" onclick="applyCorrectionsToCurrent()">✨ Aplicar Glosario</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('txt')">TXT</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('srt')">SRT</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('vtt')">VTT</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadFile('json')">JSON</button>
+          </div>
+        </div>
+
+        <div class="transcript-box" id="transcript-display"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: TIEMPO REAL -->
+    <div id="tab-realtime" class="panel">
+      <div class="card">
+        <div class="card-title">Grabación y Transcripción en Vivo</div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Idioma</label>
+            <select id="rt-lang">
+              <option value="es" selected>Español (es)</option>
+              <option value="en">Inglés (en)</option>
+              <option value="auto">Detección automática</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Modelo en Tiempo Real</label>
+            <select id="rt-model">
+              <option value="small" selected>small (Balance óptimo velocidad/calidad)</option>
+              <option value="base">base (Ultra rápido para CPU)</option>
+              <option value="large-v3-turbo">large-v3-turbo (Mayor calidad)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mic-center">
+          <button id="mic-btn" class="mic-btn" onclick="toggleMicrophone()">🎙️</button>
+          <div id="mic-status" style="font-weight: 600; font-size: 15px;">Haz clic en el micrófono para hablar</div>
+          <div id="mic-timer" class="mic-timer">00:00</div>
+          <div class="audio-meter"><div id="audio-meter-fill" class="audio-meter-fill"></div></div>
+        </div>
+
+        <div class="results-header" style="margin-top: 16px;">
+          <span style="font-size: 14px; font-weight: 600;">Texto Detectado en Vivo</span>
+          <div class="btn-group">
+            <button class="btn btn-secondary btn-sm" onclick="copyRtText()">📋 Copiar</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadRt('txt')">TXT</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadRt('srt')">SRT</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadRt('json')">JSON</button>
+          </div>
+        </div>
+        <div class="transcript-box" id="rt-transcript-display" style="min-height: 160px;">
+          <div style="color: var(--text-muted); font-style: italic;">Las palabras transcritas aparecerán aquí mientras hablas...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: GLOSARIO -->
+    <div id="tab-vocabulary" class="panel">
+      <div class="card">
+        <div class="card-title">Glosario de Nombres Propios y Reglas Fonéticas</div>
+        
+        <div class="alert">
+          <span>🛡️</span>
+          <div>Las reglas se guardan en <code>correcciones.json</code>. Este archivo está protegido en <code>.gitignore</code> y nunca se sube a repositorios públicos.</div>
+        </div>
+
+        <h3 style="font-size: 15px; margin: 16px 0 8px 0;">1. Vocabulario Guía (Palabras clave para Whisper)</h3>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="new-term" placeholder="Ej: Elise, Barichara, Sueños del Bosque..." style="flex: 1;">
+          <button class="btn btn-secondary" onclick="addVocabTerm()">+ Agregar Término</button>
+        </div>
+        <div id="vocab-tags" style="margin-bottom: 24px;"></div>
+
+        <h3 style="font-size: 15px; margin: 16px 0 8px 0;">2. Reemplazos Fonéticos Automáticos</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="repl-from" placeholder="Palabra errónea (ej. Swayna Stolboski)">
+          <input type="text" id="repl-to" placeholder="Palabra correcta (ej. Sueños del Bosque)">
+          <button class="btn btn-secondary" onclick="addReplacementRule()">+ Agregar Regla</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Como lo entiende Whisper</th>
+              <th>➔</th>
+              <th>Palabra Real Correcta</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="replacements-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: SISTEMA -->
+    <div id="tab-system" class="panel">
+      <div class="card">
+        <div class="card-title">Diagnóstico y Estado del Sistema</div>
+        <table>
+          <tbody id="system-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSelectedFile = null;
+    let currentSegments = [];
+    let currentBaseName = "transcripcion";
+
+    // Grabación en vivo por navegador
+    let mediaRecorder = null;
+    let audioContext = null;
+    let analyser = null;
+    let micStream = null;
+    let isRecording = false;
+    let recordStartTime = 0;
+    let timerInterval = null;
+    let rtSegments = [];
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSystemStatus();
+      loadVocabulary();
+      setupDragAndDrop();
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    async function loadSystemStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        document.getElementById('hardware-badge').innerText = `${data.device.toUpperCase()} (${data.compute_type}) • ${data.cpu_threads} Hilos`;
+
+        const tbody = document.getElementById('system-tbody');
+        tbody.innerHTML = `
+          <tr><td>Versión de VozATexto</td><td>v${data.version}</td></tr>
+          <tr><td>Dispositivo de Cómputo</td><td>${data.device.toUpperCase()} (${data.compute_type})</td></tr>
+          <tr><td>Hilos de CPU asignados</td><td>${data.cpu_threads}</td></tr>
+          <tr><td>Directorio de Salida</td><td><code>${data.output_dir}</code></td></tr>
+          <tr><td>Modelo predeterminado para archivos</td><td>${data.model_file}</td></tr>
+          <tr><td>Modelo predeterminado para tiempo real</td><td>${data.model_realtime}</td></tr>
+          <tr><td>Filtro Anti-Alucinaciones</td><td>Silero VAD integrado + condition_on_previous_text=False</td></tr>
+        `;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Configuración de Drag & Drop
+    function setupDragAndDrop() {
+      const zone = document.getElementById('drop-zone');
+      ['dragenter', 'dragover'].forEach(e => {
+        zone.addEventListener(e, (ev) => { ev.preventDefault(); zone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(e => {
+        zone.addEventListener(e, (ev) => { ev.preventDefault(); zone.classList.remove('dragover'); });
+      });
+      zone.addEventListener('drop', (ev) => {
+        if (ev.dataTransfer.files && ev.dataTransfer.files[0]) {
+          handleFileSelected(ev.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function handleFileSelected(file) {
+      if (!file) return;
+      currentSelectedFile = file;
+      document.getElementById('drop-text').innerText = `Archivo seleccionado: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+      document.getElementById('btn-transcribe').disabled = false;
+
+      // Audio preview
+      const preview = document.getElementById('audio-preview');
+      const audioElem = document.getElementById('audio-element');
+      audioElem.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    }
+
+    async function startFileTranscription() {
+      if (!currentSelectedFile) return;
+
+      const btn = document.getElementById('btn-transcribe');
+      const originalText = btn.innerText;
+      btn.innerHTML = `<span class="spinner"></span> Transcribiendo audio con Silero VAD...`;
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('file', currentSelectedFile);
+      formData.append('language', document.getElementById('file-lang').value);
+      formData.append('model', document.getElementById('file-model').value);
+      formData.append('timestamps', document.getElementById('file-timestamps').checked);
+
+      try {
+        const res = await fetch('/api/transcribe-file', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          currentSegments = data.segments;
+          currentBaseName = data.base_name;
+          displaySegments(data.segments, document.getElementById('file-timestamps').checked);
+
+          const durStr = formatTime(data.metadata.duration || 0);
+          document.getElementById('transcription-stats').innerText = `Completado en ${data.metadata.elapsed_seconds || ''} • Duración: ${durStr} • Idioma: ${(data.metadata.language||'').toUpperCase()}`;
+          document.getElementById('results-card').style.display = 'block';
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo procesar el archivo.'));
+        }
+      } catch (err) {
+        alert('Error en el servidor: ' + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function loadLastSession() {
+      try {
+        const res = await fetch('/api/last-transcription');
+        const data = await res.json();
+        if (data.status === 'success') {
+          currentSegments = data.segments;
+          currentBaseName = data.base_filename;
+          displaySegments(data.segments, true);
+          document.getElementById('transcription-stats').innerText = `Sesión recuperada: ${data.base_filename} (${data.total_segments} segmentos)`;
+          document.getElementById('results-card').style.display = 'block';
+        } else {
+          alert('No hay ninguna transcripción en la memoria temporal reciente.');
+        }
+      } catch (err) {
+        alert('Error al recuperar última sesión: ' + err.message);
+      }
+    }
+
+    function displaySegments(segments, showTimestamps) {
+      const container = document.getElementById('transcript-display');
+      container.innerHTML = '';
+      if (!segments || segments.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-style: italic;">No se detectó voz hablada en el audio.</div>';
+        return;
+      }
+
+      segments.forEach(seg => {
+        const item = document.createElement('div');
+        item.className = 'segment-item';
+        const ts = showTimestamps ? `<span class="timestamp">[${formatTime(seg.start)} ➔ ${formatTime(seg.end)}]</span>` : '';
+        item.innerHTML = `${ts}<span class="segment-text">${escapeHtml(seg.text)}</span>`;
+        container.appendChild(item);
+      });
+    }
+
+    function formatTime(seconds) {
+      const totalSecs = Math.floor(seconds);
+      const mins = Math.floor(totalSecs / 60);
+      const secs = totalSecs % 60;
+      const ms = Math.floor((seconds - totalSecs) * 1000);
+      return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function copyFullText() {
+      const text = currentSegments.map(s => s.text).join(' ');
+      navigator.clipboard.writeText(text);
+      alert('Texto copiado al portapapeles.');
+    }
+
+    async function applyCorrectionsToCurrent() {
+      if (!currentSegments || currentSegments.length === 0) return;
+      try {
+        const res = await fetch('/api/apply-corrections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            segments: currentSegments,
+            base_name: currentBaseName,
+            timestamps: document.getElementById('file-timestamps').checked
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          currentSegments = data.segments;
+          displaySegments(currentSegments, document.getElementById('file-timestamps').checked);
+          alert(`¡Glosario aplicado! Se realizaron ${data.changes_applied} correcciones.`);
+        }
+      } catch (err) {
+        alert('Error al aplicar correcciones: ' + err.message);
+      }
+    }
+
+    // Exportadores en el cliente
+    function downloadFile(fmt) {
+      if (!currentSegments || currentSegments.length === 0) return;
+      let content = "";
+      let filename = `${currentBaseName}.${fmt}`;
+      let mime = "text/plain";
+
+      if (fmt === 'txt') {
+        const showTs = document.getElementById('file-timestamps').checked;
+        content = currentSegments.map(s => showTs ? `[${formatTime(s.start)} --> ${formatTime(s.end)}] ${s.text}` : s.text).join('\n');
+      } else if (fmt === 'srt') {
+        content = currentSegments.map((s, i) => `${i+1}\n00:${formatTime(s.start).replace('.', ',')} --> 00:${formatTime(s.end).replace('.', ',')}\n${s.text}\n`).join('\n');
+      } else if (fmt === 'vtt') {
+        content = "WEBVTT\n\n" + currentSegments.map(s => `00:${formatTime(s.start)} --> 00:${formatTime(s.end)}\n${s.text}\n`).join('\n');
+      } else if (fmt === 'json') {
+        content = JSON.stringify({ segments: currentSegments, full_text: currentSegments.map(s=>s.text).join(' ') }, null, 2);
+        mime = "application/json";
+      }
+
+      const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    }
+
+    // --- TIEMPO REAL / MICRÓFONO ---
+    async function toggleMicrophone() {
+      const btn = document.getElementById('mic-btn');
+      const status = document.getElementById('mic-status');
+
+      if (!isRecording) {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          const source = audioContext.createMediaStreamSource(micStream);
+          source.connect(analyser);
+
+          mediaRecorder = new MediaRecorder(micStream);
+          rtSegments = [];
+          document.getElementById('rt-transcript-display').innerHTML = '';
+
+          mediaRecorder.ondataavailable = async (e) => {
+            if (e.data && e.data.size > 0) {
+              const chunkForm = new FormData();
+              chunkForm.append('chunk', e.data, 'chunk.webm');
+              chunkForm.append('language', document.getElementById('rt-lang').value);
+              chunkForm.append('model', document.getElementById('rt-model').value);
+              chunkForm.append('offset', (Date.now() - recordStartTime) / 1000 - 3);
+
+              try {
+                const res = await fetch('/api/transcribe-chunk', { method: 'POST', body: chunkForm });
+                const rdata = await res.json();
+                if (rdata.segments && rdata.segments.length > 0) {
+                  rdata.segments.forEach(s => {
+                    rtSegments.push(s);
+                    const line = document.createElement('div');
+                    line.className = 'segment-item';
+                    line.innerHTML = `<span class="timestamp">[${formatTime(s.start)}]</span> <span class="segment-text">${escapeHtml(s.text)}</span>`;
+                    document.getElementById('rt-transcript-display').appendChild(line);
+                    document.getElementById('rt-transcript-display').scrollTop = document.getElementById('rt-transcript-display').scrollHeight;
+                  });
+                }
+              } catch(err) { console.error(err); }
+            }
+          };
+
+          mediaRecorder.start(3000); // Fragmentos cada 3s
+          isRecording = true;
+          recordStartTime = Date.now();
+          btn.classList.add('recording');
+          btn.innerText = '⏹️';
+          status.innerText = "Escuchando... Habla al micrófono.";
+
+          timerInterval = setInterval(() => {
+            const elap = Math.floor((Date.now() - recordStartTime) / 1000);
+            const m = String(Math.floor(elap / 60)).padStart(2, '0');
+            const s = String(elap % 60).padStart(2, '0');
+            document.getElementById('mic-timer').innerText = `${m}:${s}`;
+          }, 1000);
+
+          updateMeter();
+        } catch (err) {
+          alert("Error al acceder al micrófono: " + err.message);
+        }
+      } else {
+        // Detener grabación
+        isRecording = false;
+        clearInterval(timerInterval);
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+        if (audioContext) audioContext.close();
+
+        btn.classList.remove('recording');
+        btn.innerText = '🎙️';
+        status.innerText = "Grabación finalizada.";
+        document.getElementById('audio-meter-fill').style.width = '0%';
+      }
+    }
+
+    function updateMeter() {
+      if (!isRecording || !analyser) return;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      const pct = Math.min(100, Math.round((avg / 128) * 100));
+      document.getElementById('audio-meter-fill').style.width = pct + '%';
+      requestAnimationFrame(updateMeter);
+    }
+
+    function copyRtText() {
+      const text = rtSegments.map(s => s.text).join(' ');
+      navigator.clipboard.writeText(text);
+      alert('Texto en tiempo real copiado.');
+    }
+
+    function downloadRt(fmt) {
+      currentSegments = rtSegments;
+      currentBaseName = "grabacion_en_vivo_" + new Date().toISOString().slice(0,19).replace(/[-:]/g,"");
+      downloadFile(fmt);
+    }
+
+    // --- GLOSARIO ---
+    async function loadVocabulary() {
+      try {
+        const res = await fetch('/api/vocabulary');
+        const data = await res.json();
+
+        // Vocab tags
+        const tagsContainer = document.getElementById('vocab-tags');
+        tagsContainer.innerHTML = '';
+        (data.vocabulario_guia || []).forEach(term => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.innerHTML = `${escapeHtml(term)} <a href="#" style="color: var(--danger); text-decoration:none; margin-left:4px;" onclick="removeVocabTerm('${escapeHtml(term)}')">&times;</a>`;
+          tagsContainer.appendChild(span);
+        });
+
+        // Reemplazos
+        const tbody = document.getElementById('replacements-tbody');
+        tbody.innerHTML = '';
+        Object.entries(data.reemplazos || {}).forEach(([from, to]) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${escapeHtml(from)}</code></td>
+            <td>➔</td>
+            <td><strong style="color: var(--accent);">${escapeHtml(to)}</strong></td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeReplacement('${escapeHtml(from)}')">Eliminar</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    async function addVocabTerm() {
+      const term = document.getElementById('new-term').value.trim();
+      if (!term) return;
+      const f = new FormData(); f.append('term', term);
+      await fetch('/api/vocabulary/term', { method: 'POST', body: f });
+      document.getElementById('new-term').value = '';
+      loadVocabulary();
+    }
+
+    async function removeVocabTerm(term) {
+      const f = new FormData(); f.append('term', term);
+      await fetch('/api/vocabulary/term', { method: 'DELETE', body: f });
+      loadVocabulary();
+    }
+
+    async function addReplacementRule() {
+      const fromText = document.getElementById('repl-from').value.trim();
+      const toText = document.getElementById('repl-to').value.trim();
+      if (!fromText || !toText) return;
+      const f = new FormData(); f.append('from_text', fromText); f.append('to_text', toText);
+      await fetch('/api/vocabulary/replacement', { method: 'POST', body: f });
+      document.getElementById('repl-from').value = '';
+      document.getElementById('repl-to').value = '';
+      loadVocabulary();
+    }
+
+    async function removeReplacement(fromText) {
+      const f = new FormData(); f.append('from_text', fromText);
+      await fetch('/api/vocabulary/replacement', { method: 'DELETE', body: f });
+      loadVocabulary();
+    }
+  </script>
+</body>
+</html>
