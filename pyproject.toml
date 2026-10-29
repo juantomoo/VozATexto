@@ -1,0 +1,18 @@
+[project]
+name = "vozatexto"
+version = "0.1.0"
+description = "Aplicación CLI interactiva para transcripción de voz a texto en tiempo real y por archivos"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "av==14.1.0",
+    "faster-whisper>=1.2.1",
+    "numpy>=2.5.4",
+    "questionary>=2.1.1",
+    "rich>=15.0.0",
+    "sounddevice>=0.5.6",
+    "soundfile>=0.14.0",
+]
+
+[project.scripts]
+vozatexto = "vozatexto.cli:main"

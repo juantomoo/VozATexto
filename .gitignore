@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Archivos de audio y pruebas
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.flac
+*.aac
+
+# Transcripciones generadas
+transcripciones/
+*.srt
+*.vtt
+
+# Ajustes privados del usuario, nombres propios y correcciones confidenciales
+correcciones.json
+correcciones.local.json
+.config/

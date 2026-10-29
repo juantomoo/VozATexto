@@ -1,0 +1,13 @@
+{
+  "_comentario": "Plantilla de ejemplo. Copia este archivo como 'correcciones.json' para agregar tus nombres propios y reglas de corrección.",
+  "vocabulario_guia": [
+    "NombrePropio1",
+    "NombrePropio2",
+    "LugarGeográfico",
+    "TérminoTécnico"
+  ],
+  "reemplazos": {
+    "PalabraInterpretadaPorWhisper": "PalabraRealCorrecta",
+    "Columbia": "Colombia"
+  }
+}
