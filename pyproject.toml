@@ -20,3 +20,7 @@ dependencies = [
 vozatexto = "vozatexto.cli:main"
 vozatexto-web = "vozatexto.web:start_server"
 vozatexto-mcp = "vozatexto.mcp_server:main"
+
+[tool.setuptools.packages.find]
+include = ["vozatexto*"]
+exclude = ["transcripciones*"]
